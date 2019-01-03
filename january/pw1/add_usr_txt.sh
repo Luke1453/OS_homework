@@ -1,15 +1,13 @@
 #!bin/bash
 #Script that Creates user accounts automatically, taking initial information from a text file and keyboard (16 points).
 echo ""
+
 echo WARNING: IN PRIVIDED FILE YOU NEED TO SPECIFY IN FIRST LINE HOW MANY USERS YOU NEED TO CREATE AND BEFORE USER DATA HOW MANY NAMES USER HAS!
 
-echo Please enter file with user credentials:
-read file
+read -p "Please enter file with user credentials: " file
+read -p "Please enter name of Organisational Unit of all users in given file: " OU
 
-echo Please enter name of Organisational Unit of all users in given file:
-read OU
-
-pass="linuxPower"
+pass=linuxPower
 
 nrofusers=$(head -n 1 $file)	#how much users to create
 nameline=2
@@ -20,7 +18,17 @@ if grep -q $group /etc/group
 then
 	sleep 1
 else
-	groupadd $group
+	
+	while true; do
+		read -p "Group \"$group\" dosen't exit, proceet to create? y/n: " yn
+		case $yn in
+			[Yy] ) groupadd $group
+			break;;
+			[Nn] ) exit;;
+			* ) echo "Please enter y or n.";;
+		esac
+	done
+	
 fi
 
 for (( i=1; i<=$nrofusers; i++ ))
@@ -62,13 +70,12 @@ do
 		mkdir -p "$home_d"	
 
 		useradd -g $group -d $home_d $username
-		echo -e "$pass\n$pass\n" | passwd $username
+		echo "$username:$pass" | chpasswd
 
 		echo added user: $username
 
 	fi
 
 done
-	
 
-
+echo ""
